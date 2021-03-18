@@ -1,0 +1,25 @@
+{
+  "user": "",
+  "accessKey": "",
+  "specDir": "",
+  "devices": [
+    {
+      "os_version": "14",
+      "device": "iPhone XS",
+      "real_mobile": "true",
+      "browserName": "iPhone"
+    },
+    {
+      "os": "Windows",
+      "os_version": "10",
+      "browserName": "Chrome",
+      "browser_version": "88.0"
+    },
+    {
+      "os": "OS X",
+      "os_version": "Big Sur",
+      "browserName": "Safari",
+      "browser_version": "14.0"
+    }
+  ]
+}
