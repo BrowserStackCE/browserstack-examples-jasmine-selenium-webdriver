@@ -1,11 +1,8 @@
 {
-  "user": "",
-  "accessKey": "",
+  "user": "anirudhakhanna6",
+  "accessKey": "abcdefghijklmno",
   "num_parallels": 5,
-  "specs": {
-    "dir": "tests",
-    "pattern": "*.spec.*"
-  },
+  "specsDir": "tests",
   "devices": [
     {
       "name": "iPhone XS 14",
@@ -19,14 +16,16 @@
       "os": "Windows",
       "os_version": "10",
       "browserName": "Chrome",
-      "browser_version": "88.0"
+      "browser_version": "88.0",
+      "real_mobile": "false"
     },
     {
       "name": "Safari Big Sur",
       "os": "OS X",
       "os_version": "Big Sur",
       "browserName": "Safari",
-      "browser_version": "14.0"
+      "browser_version": "14.0",
+      "real_mobile": "false"
     }
   ]
 }

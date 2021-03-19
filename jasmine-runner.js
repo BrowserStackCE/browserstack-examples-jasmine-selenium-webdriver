@@ -1,18 +1,23 @@
 const Jasmine = require('jasmine');
+const CONFIG = require('./config.json')
 
-console.log("Process Arguments :: " + JSON.stringify(process.argv));
-const username = process.env.BROWSERSTACK_USER;
-const accessKey = process.env.BROWSERSTACK_ACCESSKEY;
+const spec_file = process.argv[2];
+const username = CONFIG.user || process.env.BROWSERSTACK_USER;
+const accessKey = CONFIG.accessKey || process.env.BROWSERSTACK_ACCESSKEY;
 const remoteHubUrl = `https://${username}:${accessKey}@hub-cloud.browserstack.com/wd/hub`;
 
-const caps = {
-  'os_version': process.env.OS_VERSION,
-  'browserName': process.env.BROWSERNAME,
-  'browser_version': process.env.BROWSER_VERSON,
-  'os': process.env.OS,
-  'name': process.env.NAME, // test name
-  'build': process.env.BUILD // CI/CD job or build name
+const DEVICES = CONFIG.devices;
+for (let idx = 0; idx < DEVICES.length; idx++) {
+  const device = DEVICES[idx];
+  process.env.OS_VERSION = device.os_version;
+  process.env.BROWSERNAME = device.browserName;
+  process.env.BROWSER_VERSON = device.browser_version;
+  process.env.OS = device.os;
+  process.env.REAL_MOBILE = device.real_mobile;
+  console.log("Will Execute Test spec " + spec_file + " URL :: "+ remoteHubUrl + " INDEX " + idx + " DEVICE :: " + JSON.stringify(device));
+  // const jasmine = new Jasmine();
+  // jasmine.execute([spec_file]);
 }
-console.log("Test spec1 initiated with URL :: "+ remoteHubUrl + " CAPS :: " + JSON.stringify(caps));
+
 
 // Add the code here to run the jasmine tests using the jasmine node module
