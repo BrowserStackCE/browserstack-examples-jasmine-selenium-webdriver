@@ -1,21 +1,28 @@
 {
   "user": "",
   "accessKey": "",
-  "specDir": "",
+  "num_parallels": 5,
+  "specs": {
+    "dir": "tests",
+    "pattern": "*.spec.*"
+  },
   "devices": [
     {
+      "name": "iPhone XS 14",
       "os_version": "14",
       "device": "iPhone XS",
       "real_mobile": "true",
       "browserName": "iPhone"
     },
     {
+      "name": "Chrome Windows",
       "os": "Windows",
       "os_version": "10",
       "browserName": "Chrome",
       "browser_version": "88.0"
     },
     {
+      "name": "Safari Big Sur",
       "os": "OS X",
       "os_version": "Big Sur",
       "browserName": "Safari",

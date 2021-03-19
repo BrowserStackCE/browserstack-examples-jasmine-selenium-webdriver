@@ -1,4 +1,6 @@
+const Jasmine = require('jasmine');
 
+console.log("Process Arguments :: " + JSON.stringify(process.argv));
 const username = process.env.BROWSERSTACK_USER;
 const accessKey = process.env.BROWSERSTACK_ACCESSKEY;
 const remoteHubUrl = `https://${username}:${accessKey}@hub-cloud.browserstack.com/wd/hub`;
