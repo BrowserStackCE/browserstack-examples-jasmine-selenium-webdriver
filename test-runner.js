@@ -1,4 +1,4 @@
-const { fork } = require('child_process')
+const {fork} = require('child_process')
 const CONFIG = require('./config.json')
 const events = require('events');
 const fs = require('fs');
@@ -9,6 +9,7 @@ const NUM_PARALLELS = CONFIG['num_parallels'];
 const EVENT_EMITTER = new events.EventEmitter();
 let SPEC_FILES = [];
 let SPEC_IDX = 0;
+// const CHILD_PROCS = [];
 //joining path of directory
 const DIR_PATH = path.join(__dirname, CONFIG.specsDir);
 
@@ -28,15 +29,18 @@ async function findAllSpecs(specDir) {
   return specFiles;
 }
 
-const spawnJasmineRunner = function(numInstances) {
-  for (let n = 0; n < numInstances; n++) {
-    let spec_file = path.join(DIR_PATH, SPEC_FILES[SPEC_IDX]);
-    let child_process = fork('./jasmine-runner.js', [spec_file]);
-    SPEC_IDX++;
-    child_process.on('close', function () {
-      EVENT_EMITTER.emit('specCompleted', [SPEC_IDX, 1]);
-    });
+const spawnJasmineRunner = function () {
+  if (SPEC_IDX >= SPEC_FILES.length) {
+    return;
   }
+  let spec_file = path.join(DIR_PATH, SPEC_FILES[SPEC_IDX]);
+  let child_process = fork('./jasmine-runner.js', [spec_file]);
+
+  child_process.on('exit', function () {
+    console.log("Child Process Exit");
+    SPEC_IDX++;
+    EVENT_EMITTER.emit('specCompleted');
+  });
 }
 
 async function main() {
@@ -46,11 +50,13 @@ async function main() {
 
   EVENT_EMITTER.on('specCompleted', spawnJasmineRunner);
   while ((SPEC_IDX < SPEC_FILES.length) && SPEC_IDX < NUM_PARALLELS) {
-    spawnJasmineRunner(1);
+    console.log("Will Spawn Jasmine Runner for SPEC IDX :: " + SPEC_IDX);
+    spawnJasmineRunner();
+    SPEC_IDX++;
   }
 }
 
 main().then(() => {
   console.log("Completed Running : " + SPEC_FILES.length + " SPEC FILES ");
-  process.exit(0);
+  // process.exit(0);
 });

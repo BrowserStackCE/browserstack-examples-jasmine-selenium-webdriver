@@ -1,7 +1,7 @@
 {
   "user": "anirudhakhanna6",
   "accessKey": "abcdefghijklmno",
-  "num_parallels": 5,
+  "num_parallels": 2,
   "specsDir": "tests",
   "devices": [
     {
