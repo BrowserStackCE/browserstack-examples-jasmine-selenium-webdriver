@@ -1,9 +1,14 @@
 {
   "user": "anirudhakhanna6",
-  "accessKey": "abcdefghijklmno",
+  "accessKey": "xzU8u48szX9q5bWDz46q",
   "num_parallels": 2,
   "specsDir": "tests",
-  "devices": [
+  "build": "Jasmine Parallels",
+  "common_caps": {
+    "browserstack.debug" : "true",
+    "browserstack.networkLogs" : "true"
+  },
+  "device_caps": [
     {
       "name": "iPhone XS 14",
       "os_version": "14",

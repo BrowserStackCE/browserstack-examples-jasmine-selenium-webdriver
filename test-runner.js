@@ -5,13 +5,34 @@ const fs = require('fs');
 const util = require('util');
 const path = require('path');
 
-const NUM_PARALLELS = CONFIG['num_parallels'];
+const NUM_PARALLELS = CONFIG.num_parallels;
+const USERNAME = CONFIG.user;
+const ACCESS_KEY = CONFIG.accessKey;
+const BUILD = CONFIG.build + " - " + Date.now();
+
 const EVENT_EMITTER = new events.EventEmitter();
-let SPEC_FILES = [];
-let SPEC_IDX = 0;
-// const CHILD_PROCS = [];
-//joining path of directory
-const DIR_PATH = path.join(__dirname, CONFIG.specsDir);
+let SPEC_RUN_IDX = 0;
+let SPEC_RUNS_DEVICE = [];
+const REMOTE_HUB_URL = `https://${USERNAME}:${ACCESS_KEY}@hub-cloud.browserstack.com/wd/hub`;
+
+function SpecRun(specFileName, specFilePath, device) {
+  this.specFileName = specFileName;
+  this.specFilePath = specFilePath;
+  this.capabilities = device;
+  this.capabilities.name = specFileName + " - " + this.capabilities.name;
+}
+
+SpecRun.prototype.getCapabilitiesAsStr = function () {
+  return JSON.stringify(this.capabilities);
+}
+
+SpecRun.prototype.getSpecFilePath = function () {
+  return this.specFilePath;
+}
+
+SpecRun.prototype.getSpecFileName = function () {
+  return this.specFileName;
+}
 
 async function findAllSpecs(specDir) {
   console.log("Finding Specs in Directory :: " + specDir);
@@ -29,34 +50,61 @@ async function findAllSpecs(specDir) {
   return specFiles;
 }
 
+async function calculateSpecRuns(config) {
+  let specDirPath = path.join(__dirname, config.specsDir);
+  let specFiles = await findAllSpecs(specDirPath);
+  console.log(`Found ${specFiles.length} Spec files to run`);
+  let device_caps = config.device_caps;
+  let specRunsForDevice = [];
+  // iterate over the number of devices and for each spec and device create
+  // an entry in an Array of SpecRun
+  for (let specIdx = 0; specIdx < specFiles.length; specIdx++) {
+    let specFile = specFiles[specIdx];
+    let specFilePath = path.join(specDirPath, specFile);
+    for (let devIdx = 0; devIdx < device_caps.length; devIdx++) {
+      let capabilities = device_caps[devIdx];
+      let common_caps = config['common_caps'];
+      let common_caps_keys = Object.keys(common_caps);
+      common_caps_keys.forEach((key, index) => {
+        capabilities[key] = common_caps[key];
+      });
+      capabilities.build = BUILD;
+      console.log(`CAPS : ${JSON.stringify(capabilities)}`);
+      let specRunDev = new SpecRun(specFile, specFilePath, capabilities);
+      specRunsForDevice.push(specRunDev);
+    }
+  }
+  // return this array from this function
+  return specRunsForDevice;
+}
+
 const spawnJasmineRunner = function () {
-  if (SPEC_IDX >= SPEC_FILES.length) {
+  console.log(`SPEC RUN IDX : ${SPEC_RUN_IDX} SPEC RUNS : ${SPEC_RUNS_DEVICE.length}`);
+  if (SPEC_RUN_IDX >= SPEC_RUNS_DEVICE.length) {
     return;
   }
-  let spec_file = path.join(DIR_PATH, SPEC_FILES[SPEC_IDX]);
-  let child_process = fork('./jasmine-runner.js', [spec_file]);
+  let specRun = SPEC_RUNS_DEVICE[SPEC_RUN_IDX];
+  console.log(`ARGS : ${specRun.getSpecFilePath()} URL : ${REMOTE_HUB_URL} CAPS : ${specRun.getCapabilitiesAsStr()}`);
+  let child_process = fork('./jasmine-runner.js',
+    [specRun.getSpecFilePath(), REMOTE_HUB_URL, specRun.getCapabilitiesAsStr()]);
 
-  child_process.on('exit', function () {
-    console.log("Child Process Exit");
-    SPEC_IDX++;
+  child_process.on('close', function () {
     EVENT_EMITTER.emit('specCompleted');
+    SPEC_RUN_IDX++;
   });
 }
 
 async function main() {
-  SPEC_FILES = await findAllSpecs(DIR_PATH);
-  console.log("Total Spec files to run :: " + SPEC_FILES.length);
-  console.log("Spec files to run :: " + SPEC_FILES);
+  SPEC_RUNS_DEVICE = await calculateSpecRuns(CONFIG);
+  console.log(`Total Spec Runs :: ${SPEC_RUNS_DEVICE.length}`);
 
   EVENT_EMITTER.on('specCompleted', spawnJasmineRunner);
-  while ((SPEC_IDX < SPEC_FILES.length) && SPEC_IDX < NUM_PARALLELS) {
-    console.log("Will Spawn Jasmine Runner for SPEC IDX :: " + SPEC_IDX);
+  while (SPEC_RUN_IDX < SPEC_RUNS_DEVICE.length && SPEC_RUN_IDX < NUM_PARALLELS) {
     spawnJasmineRunner();
-    SPEC_IDX++;
+    SPEC_RUN_IDX++;
   }
 }
 
 main().then(() => {
-  console.log("Completed Running : " + SPEC_FILES.length + " SPEC FILES ");
-  // process.exit(0);
+  console.log("Completed Test execution.");
 });
